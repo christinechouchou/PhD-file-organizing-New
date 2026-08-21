@@ -1,0 +1,1430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Christine's PhD Data Tracking System</title>
+<style>
+:root { color-scheme: light; }
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  background: #F4F6F8;
+  color: #1a1a1a;
+}
+.app { max-width: 1000px; margin: 0 auto; padding: 20px 20px 60px; }
+h1.title { font-size: 20px; margin: 0 0 4px; color: #000; }
+
+/* bottom info section — gray, unsaturated, black text */
+.info-footer { background: #E9E9E9; border-radius: 6px; padding: 12px 16px; margin-top: 24px; color: #000; }
+.info-footer p { font-size: 12.5px; margin: 0 0 8px; line-height: 1.5; }
+.info-footer p:last-child { margin-bottom: 0; }
+.info-footer strong { font-weight: 700; }
+
+/* project tabs — soft slate blue */
+.tabbar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; align-items: center; }
+.tab {
+  background: #8CA4B8; color: #fff; border: none; padding: 10px 20px;
+  font-size: 14px; font-weight: 600; border-radius: 6px 6px 0 0; cursor: pointer;
+  transition: background .15s;
+}
+.tab:hover { background: #7C97AE; }
+.tab.active { background: #1F4E78; box-shadow: inset 0 -3px 0 #D9BE6E; }
+.tab.add { background: #E3EBF1; color: #5A7A93; border-radius: 6px; }
+.tab.add:hover { background: #D4E0E9; }
+.tab-rename { cursor: text; }
+
+/* toolbar */
+.toolbar { display:flex; gap:8px; margin-bottom: 16px; }
+.btn-sm { font-size:12px; padding:6px 10px; border-radius:5px; border:1px solid #ccc; background:#fff; cursor:pointer; }
+.btn-sm:hover { background:#f0f0f0; }
+
+/* folder sync banner */
+.folder-banner { background: #EAF1F8; border: 1px solid #cddceb; border-radius: 6px; padding: 8px 12px; font-size: 12.5px; margin-bottom: 12px; color: #5A7A93; }
+.folder-banner code { background: #fff; border-radius: 4px; padding: 1px 6px; font-size: 11.5px; font-family: inherit; }
+.folder-banner .synced-note { display: block; color: #555; font-size: 11.5px; margin-top: 4px; }
+.folder-files { background: rgba(255,255,255,.15); border-radius: 5px; padding: 6px; margin-bottom: 8px; }
+.folder-files-label { font-size: 11.5px; font-weight: 700; opacity: .95; margin-bottom: 4px; }
+.folder-file-row { background: #fff; color: #333; border-radius: 4px; padding: 5px 7px; margin-bottom: 4px; font-size: 11.5px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.folder-file-row:last-child { margin-bottom: 0; }
+.folder-file-row .ffname { font-weight: 600; flex: 1; min-width: 90px; overflow-wrap: anywhere; }
+.folder-file-row .ffmeta { color: #666; font-size: 11px; }
+.folder-empty { font-size: 11.5px; opacity: .85; }
+.btn-tiny { font-size: 10.5px; padding: 2px 7px; border-radius: 4px; border: 1px solid #ccc; background: #fafafa; cursor: pointer; }
+.btn-tiny:hover { background: #f0f0f0; }
+.folder-error { margin-top: 6px; color: #b00; font-weight: 600; }
+.folder-file-row .ffname.clickable-file { cursor: pointer; text-decoration: underline dotted; }
+.folder-file-row .ffname.clickable-file:hover { color: #4C6432; }
+.folder-file-row .ffnotes { width: 100%; color: #666; font-size: 11px; }
+.folder-file-row.pending { background: #FFF7E0; border: 1px dashed #E0B84B; }
+.folder-file-row.pending .ffmeta { color: #8a6d1f; font-weight: 600; }
+
+/* upload fields — unsaturated Median-style sage green, dark saturated text */
+.upload-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 12px; }
+.upload-card { background: #CBD6B8; border-radius: 6px; padding: 12px 14px; color: #3E4F28; }
+.upload-card h3 { margin: 0 0 8px; font-size: 15px; }
+.upload-card .items { background: rgba(0,0,0,.05); border-radius: 5px; padding: 6px; min-height: 8px; margin-bottom: 8px; max-height: 140px; overflow-y: auto; }
+.upload-item { background: #fff; color: #333; border-radius: 4px; padding: 6px 8px; margin-bottom: 5px; font-size: 12.5px; display:flex; justify-content:space-between; gap:6px; align-items:flex-start; }
+.upload-item:last-child { margin-bottom: 0; }
+.upload-item .meta { flex:1; }
+.upload-item .meta .fname { font-weight:600; display:block; }
+.upload-item .meta .fname.clickable-file { cursor: pointer; color: #4C6432; text-decoration: underline dotted; }
+.upload-item .meta .fname.clickable-file:hover { color: #6F8A50; }
+.upload-item .meta .fnotes { color:#666; font-size:11.5px; display:block; }
+.inline-form input[type=file] { color: #3E4F28; font-size: 11.5px; }
+.upload-item .rm { cursor:pointer; color:#b00; font-weight:700; border:none; background:none; font-size:14px; line-height:1; }
+.add-file-btn { background:#fff; color:#4C6432; border:none; border-radius:4px; padding:5px 10px; font-size:12.5px; font-weight:600; cursor:pointer; }
+.add-file-btn:hover { background:#EEF3E3; }
+.inline-form { margin-top:8px; background:rgba(0,0,0,.05); padding:8px; border-radius:5px; display:none; }
+.inline-form.show { display:block; }
+.inline-form input { width:100%; margin-bottom:6px; padding:5px 7px; border-radius:4px; border:none; font-size:12.5px; }
+.inline-form .row-btns { display:flex; gap:6px; }
+.inline-form button { font-size:12px; padding:5px 10px; border-radius:4px; border:none; cursor:pointer; }
+.inline-form .save { background:#fff; color:#4C6432; font-weight:600; }
+.inline-form .cancel { background:rgba(0,0,0,.08); color:#3E4F28; }
+
+/* editable titles */
+.editable-title { cursor: text; border-bottom: 1px dashed rgba(255,255,255,.5); }
+.editable-title:hover { border-bottom-color: rgba(255,255,255,.95); }
+.page-title .editable-title { border-bottom-color: rgba(138,109,31,.4); }
+.page-title .editable-title:hover { border-bottom-color: #8a6d1f; }
+.pub-btn .editable-title { border-bottom-color: rgba(107,82,5,.4); }
+.pub-btn .editable-title:hover { border-bottom-color: #6b5205; }
+.upload-card .editable-title { border-bottom-color: rgba(62,79,40,.4); }
+.upload-card .editable-title:hover { border-bottom-color: #3E4F28; }
+.section-header .editable-title { border-bottom-color: rgba(74,54,36,.4); }
+.section-header .editable-title:hover { border-bottom-color: #4A3624; }
+.title-edit-input {
+  font: inherit; font-weight: inherit; color: #1a1a1a; background: #fff;
+  border: 1px solid #5A7A93; border-radius: 4px; padding: 1px 5px;
+  min-width: 60px; max-width: 260px;
+}
+.upload-card h3, .section-header > span:first-child, .pub-btn span:first-child, .page-title { display: inline-flex; align-items: center; gap: 2px; }
+
+/* Books and papers button — soft Median-style gold */
+.pub-btn {
+  width: 100%; background: #EFDCA8; color: #6b5205; border: none; border-radius: 6px;
+  padding: 14px; font-size: 15px; font-weight: 700; cursor: pointer; margin-bottom: 16px;
+  display:flex; justify-content:space-between; align-items:center;
+}
+.pub-btn:hover { background: #E5CD8C; }
+.pub-btn .count { background: rgba(0,0,0,.08); border-radius: 10px; padding: 2px 10px; font-size: 12px; }
+
+/* typed-list sections — soft taupe-brown header */
+.section { margin-bottom: 10px; border: 1px solid #d5d5d5; border-radius: 6px; overflow: hidden; background:#fff; }
+.section-header {
+  background: #D9C3B2; color: #4A3624; padding: 10px 14px; cursor: pointer;
+  display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 14px;
+  user-select: none;
+}
+.section-header:hover { background: #CDB29C; }
+.section-header .chev { transition: transform .15s; font-size: 12px; }
+.section-header.collapsed .chev { transform: rotate(-90deg); }
+.section-body { padding: 10px 12px; }
+.section-body.hidden { display: none; }
+
+table.datatable { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+table.datatable th { background: #f0f2f4; text-align: left; padding: 6px 8px; border-bottom: 2px solid #ddd; font-size: 11.5px; text-transform: uppercase; letter-spacing: .03em; color: #555; }
+table.datatable td { padding: 4px 6px; border-bottom: 1px solid #eee; vertical-align: middle; }
+table.datatable input[type=text], table.datatable input[type=date], table.datatable select, table.datatable textarea {
+  width: 100%; border: 1px solid transparent; background: transparent; padding: 5px 6px; font-size: 12.5px; border-radius: 4px; font-family: inherit;
+}
+table.datatable textarea { resize: vertical; min-height: 30px; line-height: 1.4; overflow: hidden; }
+table.datatable input[type=text]:hover, table.datatable input[type=date]:hover, table.datatable select:hover, table.datatable textarea:hover { border-color: #ccc; }
+table.datatable input[type=text]:focus, table.datatable input[type=date]:focus, table.datatable select:focus, table.datatable textarea:focus { border-color: #8CA4B8; outline: none; background: #fff; }
+table.datatable input[type=checkbox] { transform: scale(1.2); }
+.del-row { border: none; background: none; color: #b00; cursor: pointer; font-size: 15px; }
+.confirm-row-btn { border: 1px solid #D9BE6E; background: #FBF1D6; color: #6b5205; border-radius: 4px; padding: 4px 8px; font-size: 11.5px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.confirm-row-btn:hover { background: #F5E6B8; }
+.add-row-btn { margin-top: 8px; background: #A6A6A6; color: #fff; border: none; padding: 6px 12px; border-radius: 5px; font-size: 12.5px; cursor: pointer; }
+.add-row-btn:hover { background: #949494; }
+.empty-note { font-size: 12px; color: #999; padding: 6px 2px 10px; }
+
+/* publications page */
+.back-btn { background: #eee; border: none; padding: 7px 14px; border-radius: 5px; font-size: 13px; cursor: pointer; margin-bottom: 14px; }
+.back-btn:hover { background: #ddd; }
+.page-title { font-size: 17px; font-weight: 700; color: #8a6d1f; margin-bottom: 10px; }
+
+textarea.wide { width:100%; resize: vertical; font-family: inherit; }
+
+/* figures cell */
+.fig-cell { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; min-width: 140px; }
+.fig-thumb-wrap { position: relative; width: 40px; height: 40px; }
+.fig-thumb { width: 40px; height: 40px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc; cursor: pointer; display:block; }
+.fig-thumb-rm { position: absolute; top: -6px; right: -6px; width: 16px; height: 16px; border-radius: 50%; background: #b00; color: #fff; border: none; font-size: 10px; line-height: 16px; text-align: center; padding: 0; cursor: pointer; }
+.fig-add-btn { width: 40px; height: 40px; border: 1px dashed #999; border-radius: 4px; background: #fafafa; cursor: pointer; font-size: 18px; color: #666; }
+.fig-add-btn:hover { background: #f0f0f0; }
+
+/* lightbox */
+.lightbox-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.75); display:flex; align-items:center; justify-content:center; z-index: 1000; }
+.lightbox-overlay img { max-width: 90%; max-height: 85%; border-radius: 6px; box-shadow: 0 4px 20px rgba(0,0,0,.5); }
+.lightbox-close { position: absolute; top: 18px; right: 24px; color: #fff; font-size: 28px; cursor: pointer; background:none; border:none; }
+.lightbox-caption { position: absolute; bottom: 22px; left: 0; right: 0; text-align:center; color:#fff; font-size: 13px; }
+
+datalist { }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+
+<script>
+const STORAGE_KEY = 'phd_tracker_state_v1';
+
+const SECTION_DEFS = [
+  { id: "protocol_templates", title: "Protocol templates", schema: [
+    {key:"name", label:"Document Name", type:"text"},
+    {key:"category", label:"Category", type:"select", options:["Chemistry synthesis","Lipid imaging","Other"]},
+    {key:"date", label:"Date", type:"date"},
+    {key:"notes", label:"Notes", type:"textarea"}
+  ]},
+  { id: "compounds", title: "Compounds", schema: [
+    {key:"name", label:"Compound Name", type:"text"},
+    {key:"cas", label:"CAS #", type:"text"},
+    {key:"purity", label:"Purity", type:"text"},
+    {key:"source", label:"Source", type:"text"},
+    {key:"characterization", label:"Characterization (NMR/MS/etc)", type:"text"},
+    {key:"location", label:"Storage Location", type:"text"},
+    {key:"notes", label:"Notes", type:"textarea"}
+  ]},
+  { id: "probe_metabolism", title: "Probe metabolism", schema: [
+    {key:"name", label:"Sample / Experiment", type:"text"},
+    {key:"method", label:"MS Method", type:"text"},
+    {key:"date", label:"Date Run", type:"date"},
+    {key:"status", label:"Status", type:"select", options:["Collected","Analyzed","Missing"]},
+    {key:"notes", label:"Notes", type:"textarea"}
+  ]},
+  { id: "image_data_files", title: "Image data files", schema: [
+    {key:"name", label:"Experiment Name", type:"text"},
+    {key:"modality", label:"Imaging Modality", type:"text"},
+    {key:"date", label:"Date", type:"date"},
+    {key:"status", label:"Status", type:"select", options:["Collected","In Progress","Missing"]},
+    {key:"location", label:"File Location", type:"text"},
+    {key:"notes", label:"Notes", type:"textarea"}
+  ]},
+  { id: "analysis", title: "Analysis", schema: [
+    {key:"name", label:"Project / Script Name", type:"text"},
+    {key:"type", label:"Type", type:"select", options:["Coding","Prism","Other"]},
+    {key:"date", label:"Date", type:"date"},
+    {key:"status", label:"Status", type:"select", options:["In Progress","Complete","Needs Review"]},
+    {key:"link", label:"Link / Location", type:"text"},
+    {key:"notes", label:"Notes", type:"textarea"}
+  ]},
+  { id: "modeling_analysis", title: "Modeling and other analysis", schema: [
+    {key:"name", label:"Project Name", type:"text"},
+    {key:"type", label:"Type", type:"text"},
+    {key:"date", label:"Date", type:"date"},
+    {key:"status", label:"Status", type:"select", options:["In Progress","Complete","Needs Review"]},
+    {key:"notes", label:"Notes", type:"textarea"}
+  ]},
+  { id: "data_with_results", title: "Data with results", schema: [
+    {key:"name", label:"File Name", type:"text"},
+    {key:"type", label:"Type", type:"select", options:["PowerPoint","Illustrator","Other"]},
+    {key:"usedIn", label:"Used In", type:"text-suggest", suggestions:["Paper submission","Thesis","Seminar","Conference","Grant proposal","Other"]},
+    {key:"figures", label:"Representative Figures", type:"figures"},
+    {key:"date", label:"Date", type:"date"},
+    {key:"notes", label:"Notes", type:"textarea"}
+  ]}
+];
+const SECTION_ORDER = SECTION_DEFS.map(d => d.id);
+const SECTION_SCHEMA = {}; SECTION_DEFS.forEach(d => SECTION_SCHEMA[d.id] = d.schema);
+const DEFAULT_SECTION_TITLES = {}; SECTION_DEFS.forEach(d => DEFAULT_SECTION_TITLES[d.id] = d.title);
+
+const UPLOAD_DEFS = [
+  { id: "progress", title: "Project progress" },
+  { id: "background", title: "Background" },
+  { id: "material", title: "material" },
+  { id: "other", title: "other" }
+];
+const UPLOAD_CARDS = UPLOAD_DEFS.map(d => d.id);
+const DEFAULT_UPLOAD_TITLES = {}; UPLOAD_DEFS.forEach(d => DEFAULT_UPLOAD_TITLES[d.id] = d.title);
+
+const DEFAULT_PUB_TITLE = "Books and papers";
+
+// Fallback snapshot of your connected Desktop folder (one flat folder per project),
+// used only when live browser folder-sync isn't available/connected. Refreshed whenever
+// you ask Claude to resync. Files here live on your actual computer — nothing embedded.
+const FOLDER_SYNC = {
+  "folderRoot": "/Users/chou/Desktop/PhD_24:26",
+  "syncedAt": "2026-08-07 15:34",
+  "index": {
+    "SL-PI": [],
+    "ApoE": [],
+    "VSP13A": []
+  }
+};
+
+const PUB_SCHEMA = [
+  {key:"title", label:"Title", type:"text"},
+  {key:"authors", label:"Authors", type:"text"},
+  {key:"year", label:"Year", type:"text"},
+  {key:"link", label:"Link", type:"text"},
+  {key:"citedFor", label:"Cited For", type:"text-suggest", suggestions:["Introduction","Background","Methods","Results","Discussion","Grant proposal","Thesis chapter"]},
+  {key:"pdf", label:"Paper PDF", type:"pdf"},
+  {key:"figures", label:"Key Figures", type:"figures"},
+  {key:"notes", label:"Notes", type:"textarea"}
+];
+const MAX_FIGURE_BYTES = 4 * 1024 * 1024; // 4MB warning threshold per image
+const MAX_EMBED_BYTES = 2 * 1024 * 1024; // 2MB hard cutoff — above this, files are logged as a reference instead of embedded, since browser storage quota is typically only a few MB total and base64 encoding adds ~33% overhead
+
+function formatBytes(bytes) {
+  if (!bytes && bytes !== 0) return '';
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function uid() { return Math.random().toString(36).slice(2,10); }
+
+function newProjectData() {
+  const uploads = {};
+  UPLOAD_CARDS.forEach(c => uploads[c] = []);
+  const sections = {};
+  SECTION_ORDER.forEach(s => sections[s] = { collapsed: true, rows: [] });
+  return { uploads, publications: [], sections, fileTags: {} };
+}
+
+function freshMeta() {
+  return {
+    sectionTitles: {...DEFAULT_SECTION_TITLES},
+    uploadTitles: {...DEFAULT_UPLOAD_TITLES},
+    pubTitle: DEFAULT_PUB_TITLE
+  };
+}
+
+// Migrates state saved by earlier versions of this page, where sections/uploads
+// were keyed by their (then-fixed) title text instead of a stable id.
+function migrateState(s) {
+  if (s.meta) return s; // already on the id-based format
+  s.meta = freshMeta();
+  const titleToSectionId = {}; SECTION_DEFS.forEach(d => titleToSectionId[d.title] = d.id);
+  const titleToUploadId = {}; UPLOAD_DEFS.forEach(d => titleToUploadId[d.title] = d.id);
+  Object.values(s.projects || {}).forEach(proj => {
+    if (proj.sections) {
+      const remapped = {};
+      Object.keys(proj.sections).forEach(k => { remapped[titleToSectionId[k] || k] = proj.sections[k]; });
+      SECTION_ORDER.forEach(id => { if (!remapped[id]) remapped[id] = { collapsed: true, rows: [] }; });
+      proj.sections = remapped;
+    }
+    if (proj.uploads) {
+      const remapped = {};
+      Object.keys(proj.uploads).forEach(k => { remapped[titleToUploadId[k] || k] = proj.uploads[k]; });
+      UPLOAD_CARDS.forEach(id => { if (!remapped[id]) remapped[id] = []; });
+      proj.uploads = remapped;
+    }
+  });
+  return s;
+}
+
+// Ensures every project has a fileTags map (added when live folder-sync was introduced).
+function ensureFileTags(s) {
+  Object.values(s.projects || {}).forEach(proj => { if (!proj.fileTags) proj.fileTags = {}; });
+  return s;
+}
+
+function loadState() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (raw) {
+    try { return ensureFileTags(migrateState(JSON.parse(raw))); } catch(e) {}
+  }
+  const projects = {};
+  ["SL-PI","ApoE","VSP13A"].forEach(p => projects[p] = newProjectData());
+  return { projects, projectOrder: ["SL-PI","ApoE","VSP13A"], activeProject: "SL-PI", view: "dashboard", meta: freshMeta() };
+}
+
+let state = loadState();
+window.state = state; // exposed for debugging
+
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function esc(str) {
+  return String(str ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+function currentProject() {
+  return state.projects[state.activeProject];
+}
+
+/* ---------- live folder sync (File System Access API) ----------
+   Lets this page write/read files directly on your computer, in the connected
+   folder, instead of embedding file bytes in browser storage. Falls back to the
+   read-only FOLDER_SYNC snapshot + quick-embed if the browser doesn't support it. */
+const liveSync = {
+  supported: typeof window.showDirectoryPicker === 'function',
+  connected: false,
+  needsReconnect: false,
+  rootHandle: null,
+  listings: {}, // { projectName: [{name, size, sizeLabel, mtime}] }
+  error: null,
+  busy: false
+};
+window.liveSync = liveSync; // exposed for debugging
+
+// A PDF picked via the "+" button waits here (in memory only, not saved) until the row's
+// Confirm button is clicked — that's the only moment it's actually written to disk.
+const pendingPdfUploads = {}; // { rowId: File }
+window.pendingPdfUploads = pendingPdfUploads; // exposed for debugging
+
+function idbOpen() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open('phd_tracker_fs', 1);
+    req.onupgradeneeded = () => req.result.createObjectStore('handles');
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function idbSaveHandle(handle) {
+  const db = await idbOpen();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('handles', 'readwrite');
+    tx.objectStore('handles').put(handle, 'root');
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+async function idbLoadHandle() {
+  const db = await idbOpen();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('handles', 'readonly');
+    const req = tx.objectStore('handles').get('root');
+    req.onsuccess = () => resolve(req.result || null);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+const BOOKS_FOLDER_NAME = "Books and papers"; // fixed on-disk name — the only subfolder this page creates
+
+// Only files uploaded through the orange fields (flat, in the project's root folder) and
+// paper PDFs attached in Books and papers (in the one "Books and papers" subfolder) are
+// touched by live sync. Every gray typed-list section is untouched by any of this.
+async function refreshProjectListing(projectName) {
+  const dirHandle = await liveSync.rootHandle.getDirectoryHandle(projectName, { create: true });
+  const files = [];
+  for await (const [name, handle] of dirHandle.entries()) {
+    if (handle.kind === 'file' && !name.startsWith('.')) {
+      const f = await handle.getFile();
+      files.push({ name, size: f.size, sizeLabel: formatBytes(f.size), mtime: new Date(f.lastModified).toISOString().slice(0, 10) });
+    }
+  }
+  files.sort((a, b) => a.name.localeCompare(b.name));
+  liveSync.listings[projectName] = files;
+}
+
+async function refreshBooksListing(projectName) {
+  const projDir = await liveSync.rootHandle.getDirectoryHandle(projectName, { create: true });
+  const booksDir = await projDir.getDirectoryHandle(BOOKS_FOLDER_NAME, { create: true });
+  const files = [];
+  for await (const [name, handle] of booksDir.entries()) {
+    if (handle.kind === 'file' && !name.startsWith('.')) {
+      const f = await handle.getFile();
+      files.push({ name, size: f.size, sizeLabel: formatBytes(f.size), mtime: new Date(f.lastModified).toISOString().slice(0, 10) });
+    }
+  }
+  files.sort((a, b) => a.name.localeCompare(b.name));
+  if (!liveSync.bookListings) liveSync.bookListings = {};
+  liveSync.bookListings[projectName] = files;
+}
+
+async function refreshAllListings() {
+  for (const p of state.projectOrder) {
+    try { await refreshProjectListing(p); } catch (e) { /* project folder may not exist yet */ }
+    try { await refreshBooksListing(p); } catch (e) { /* ignore */ }
+  }
+}
+
+async function connectLiveFolder() {
+  if (!liveSync.supported) return;
+  try {
+    const handle = await window.showDirectoryPicker({ mode: 'readwrite' });
+    if (state.projectOrder.includes(handle.name)) {
+      liveSync.error = `You picked the "${handle.name}" folder itself. Please pick its parent folder (${FOLDER_SYNC.folderRoot}) instead — this page creates one subfolder per project inside it automatically.`;
+      render();
+      return;
+    }
+    liveSync.rootHandle = handle;
+    liveSync.needsReconnect = false;
+    await idbSaveHandle(handle);
+    liveSync.connected = true;
+    liveSync.error = null;
+    await refreshAllListings();
+  } catch (err) {
+    if (err.name !== 'AbortError') liveSync.error = err.message;
+  }
+  render();
+}
+
+async function reconnectLiveFolder() {
+  if (!liveSync.rootHandle) return connectLiveFolder();
+  try {
+    const perm = await liveSync.rootHandle.requestPermission({ mode: 'readwrite' });
+    if (perm === 'granted') {
+      liveSync.connected = true;
+      liveSync.needsReconnect = false;
+      liveSync.error = null;
+      await refreshAllListings();
+    } else {
+      liveSync.error = 'Folder permission was not granted.';
+    }
+  } catch (err) {
+    liveSync.error = err.message;
+  }
+  render();
+}
+
+function disconnectLiveFolder() {
+  liveSync.connected = false;
+  liveSync.rootHandle = null;
+  liveSync.needsReconnect = false;
+  liveSync.listings = {};
+  render();
+}
+
+async function tryAutoRestoreLiveFolder() {
+  if (!liveSync.supported) return;
+  try {
+    const handle = await idbLoadHandle();
+    if (!handle) return;
+    const perm = await handle.queryPermission({ mode: 'readwrite' });
+    liveSync.rootHandle = handle;
+    if (perm === 'granted') {
+      liveSync.connected = true;
+      await refreshAllListings();
+    } else {
+      liveSync.needsReconnect = true;
+    }
+    render();
+  } catch (err) { /* IndexedDB unavailable or handle stale — stays disconnected */ }
+}
+
+async function uploadFileLive(cardId, file, notes) {
+  const projectName = state.activeProject;
+  liveSync.busy = true; render();
+  try {
+    const dirHandle = await liveSync.rootHandle.getDirectoryHandle(projectName, { create: true });
+    const fileHandle = await dirHandle.getFileHandle(file.name, { create: true });
+    const writable = await fileHandle.createWritable();
+    await writable.write(file);
+    await writable.close();
+    const proj = currentProject();
+    proj.fileTags[file.name] = { card: cardId, notes: (notes || '').trim(), date: new Date().toISOString().slice(0, 10) };
+    saveState();
+    await refreshProjectListing(projectName);
+  } catch (err) {
+    alert('Could not write that file to your folder: ' + err.message);
+  }
+  liveSync.busy = false;
+  render();
+}
+
+async function openFileLive(fileName) {
+  const projectName = state.activeProject;
+  try {
+    const dirHandle = await liveSync.rootHandle.getDirectoryHandle(projectName, { create: true });
+    const fileHandle = await dirHandle.getFileHandle(fileName);
+    const file = await fileHandle.getFile();
+    const url = URL.createObjectURL(file);
+    const viewableInline = file.type && (file.type.startsWith('image/') || file.type === 'application/pdf');
+    if (viewableInline) {
+      window.open(url, '_blank');
+    } else {
+      const a = document.createElement('a');
+      a.href = url; a.download = fileName;
+      document.body.appendChild(a); a.click(); a.remove();
+    }
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  } catch (err) {
+    alert('Could not open that file: ' + err.message);
+  }
+}
+
+async function deleteFileLive(fileName) {
+  if (!confirm(`Delete "${fileName}" from your computer? This removes the actual file, not just the tracker entry.`)) return;
+  const projectName = state.activeProject;
+  try {
+    const dirHandle = await liveSync.rootHandle.getDirectoryHandle(projectName, { create: true });
+    await dirHandle.removeEntry(fileName);
+    delete currentProject().fileTags[fileName];
+    saveState();
+    await refreshProjectListing(projectName);
+  } catch (err) {
+    alert('Could not delete that file: ' + err.message);
+  }
+  render();
+}
+
+/* ---- Books and papers: paper PDFs, live-synced into the one "Books and papers" subfolder ---- */
+async function uploadPubPdfLive(rowId, file) {
+  const projectName = state.activeProject;
+  liveSync.busy = true; render();
+  try {
+    const projDir = await liveSync.rootHandle.getDirectoryHandle(projectName, { create: true });
+    const booksDir = await projDir.getDirectoryHandle(BOOKS_FOLDER_NAME, { create: true });
+    const fileHandle = await booksDir.getFileHandle(file.name, { create: true });
+    const writable = await fileHandle.createWritable();
+    await writable.write(file);
+    await writable.close();
+    const row = currentProject().publications.find(r => r.id === rowId);
+    if (row) row.pdfFileName = file.name;
+    saveState();
+    await refreshBooksListing(projectName);
+  } catch (err) {
+    alert('Could not write that PDF to your folder: ' + err.message);
+  }
+  liveSync.busy = false;
+  render();
+}
+
+async function openPubPdfLive(fileName) {
+  const projectName = state.activeProject;
+  try {
+    const projDir = await liveSync.rootHandle.getDirectoryHandle(projectName, { create: true });
+    const booksDir = await projDir.getDirectoryHandle(BOOKS_FOLDER_NAME, { create: true });
+    const fileHandle = await booksDir.getFileHandle(fileName);
+    const file = await fileHandle.getFile();
+    const url = URL.createObjectURL(file);
+    window.open(url, '_blank');
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  } catch (err) {
+    alert('Could not open that PDF: ' + err.message);
+  }
+}
+
+async function deletePubPdfLive(fileName, rowId) {
+  if (!confirm(`Delete "${fileName}" from your computer? This removes the actual file, not just the tracker entry.`)) return;
+  const projectName = state.activeProject;
+  try {
+    const projDir = await liveSync.rootHandle.getDirectoryHandle(projectName, { create: true });
+    const booksDir = await projDir.getDirectoryHandle(BOOKS_FOLDER_NAME, { create: true });
+    await booksDir.removeEntry(fileName);
+    const row = currentProject().publications.find(r => r.id === rowId);
+    if (row && row.pdfFileName === fileName) delete row.pdfFileName;
+    saveState();
+    await refreshBooksListing(projectName);
+  } catch (err) {
+    alert('Could not delete that PDF: ' + err.message);
+  }
+  render();
+}
+
+function sectionTitle(id) { return state.meta.sectionTitles[id] ?? DEFAULT_SECTION_TITLES[id]; }
+function uploadTitle(id) { return state.meta.uploadTitles[id] ?? DEFAULT_UPLOAD_TITLES[id]; }
+
+let editingTitle = null; // { kind: 'section'|'upload'|'pub', id: string|null }
+
+function renderTitle(kind, id, currentValue) {
+  if (editingTitle && editingTitle.kind === kind && editingTitle.id === id) {
+    return `<input type="text" class="title-edit-input" id="title-edit-input" value="${esc(currentValue)}" data-action="title-input" data-kind="${kind}" data-id="${id ?? ''}">`;
+  }
+  return `<span class="editable-title" data-action="start-edit-title" data-kind="${kind}" data-id="${id ?? ''}" title="Click to rename">${esc(currentValue)}</span>`;
+}
+
+/* ---------- render ---------- */
+function render() {
+  const app = document.getElementById('app');
+  let html = '';
+  html += `<h1 class="title">Christine's PhD Data Tracking System</h1>`;
+
+  // tabs
+  html += `<div class="tabbar">`;
+  state.projectOrder.forEach(p => {
+    const active = p === state.activeProject ? 'active' : '';
+    html += `<button class="tab ${active}" data-action="switch-project" data-project="${esc(p)}" title="Double-click to rename">${esc(p)}</button>`;
+  });
+  html += `<button class="tab add" data-action="add-project">+ Project</button>`;
+  html += `</div>`;
+
+  if (state.view === 'publications') {
+    html += renderPublications();
+  } else {
+    html += renderDashboard();
+
+    html += `<div class="toolbar">
+      <button class="btn-sm" data-action="rename-project">Rename project</button>
+      <button class="btn-sm" data-action="delete-project">Delete project</button>
+      <button class="btn-sm" data-action="export">Export backup (JSON)</button>
+      <button class="btn-sm" data-action="import">Import backup</button>
+    </div>`;
+
+    html += renderFolderBanner();
+  }
+
+  html += renderInfoFooter();
+
+  app.innerHTML = html;
+  attachHandlers();
+}
+
+function renderFolderBanner() {
+  let html = `<div class="folder-banner">`;
+  if (liveSync.connected) {
+    html += `📁 Live-synced to <code>${esc(FOLDER_SYNC.folderRoot)}/${esc(state.activeProject)}</code>
+      <button class="btn-sm" data-action="refresh-live">↻ Refresh</button>
+      <button class="btn-sm" data-action="disconnect-live">Disconnect</button>`;
+  } else if (liveSync.supported && liveSync.needsReconnect) {
+    html += `🔓 Folder sync needs to be reconnected (your browser resets this each session).
+      <button class="btn-sm" data-action="reconnect-live">Reconnect folder</button>
+      <span class="synced-note">Target: <code>${esc(FOLDER_SYNC.folderRoot)}</code></span>`;
+  } else if (liveSync.supported) {
+    html += `📁 Connect a folder for live file sync — uploads write straight to your computer, no size limits.
+      <button class="btn-sm" data-action="connect-live">🔗 Connect folder</button>
+      <span class="synced-note">In the picker, choose <code>${esc(FOLDER_SYNC.folderRoot)}</code> itself — NOT one of the project folders inside it. This page will create one flat folder per project automatically, plus a single "${esc(BOOKS_FOLDER_NAME)}" subfolder in each for paper PDFs. Until connected, files are quick-embedded in the browser (small files only) or logged as a reference.</span>`;
+  } else {
+    html += `⚠️ Live folder sync isn't available in this view, so uploads are quick-embedded in the browser (best under ~2MB) or logged as a reference.
+      <span class="synced-note">For anything larger, save it into <code>${esc(FOLDER_SYNC.folderRoot)}/${esc(state.activeProject)}</code> yourself and ask Claude to resync — last synced ${esc(FOLDER_SYNC.syncedAt)}.
+      <button class="btn-sm" data-action="copy-text" data-copy="${esc(FOLDER_SYNC.folderRoot)}">Copy folder path</button></span>`;
+  }
+  if (liveSync.error) html += `<div class="folder-error">⚠️ ${esc(liveSync.error)}</div>`;
+  html += `</div>`;
+  return html;
+}
+
+function renderInfoFooter() {
+  return `<div class="info-footer">
+    <p><strong>Webpage setup for:</strong> Track progress, files, and organization across your projects. Everything saves automatically in this page.</p>
+    <p><strong>Data:</strong> Applies only to the orange fields (saved flat in this folder) and Books and papers (PDFs saved in its own "${esc(BOOKS_FOLDER_NAME)}" subfolder — the only subfolder this page creates). The gray sections below are just typed lists and are never touched.</p>
+  </div>`;
+}
+
+function renderDashboard() {
+  const proj = currentProject();
+  let html = '';
+
+  // unified list of real files for this project, whichever source is active
+  const liveList = liveSync.connected ? (liveSync.listings[state.activeProject] || []) : null;
+  const fallbackList = FOLDER_SYNC.index[state.activeProject] || [];
+  const realFiles = liveList !== null ? liveList : fallbackList;
+  const fileTags = proj.fileTags || {};
+
+  // orange upload cards
+  html += `<div class="upload-grid">`;
+  UPLOAD_CARDS.forEach(cardId => {
+    const items = proj.uploads[cardId] || [];
+    const taggedFiles = realFiles.filter(f => (fileTags[f.name]?.card || 'other') === cardId);
+    html += `<div class="upload-card">
+      <h3>${renderTitle('upload', cardId, uploadTitle(cardId))}</h3>`;
+
+    // real files (live-synced or last-known-snapshot), tagged to this card
+    html += `<div class="folder-files">`;
+    if (taggedFiles.length === 0) {
+      html += `<div class="folder-empty">No files yet.</div>`;
+    } else {
+      taggedFiles.forEach(f => {
+        const tag = fileTags[f.name];
+        html += `<div class="folder-file-row">
+          <span class="ffname${liveSync.connected ? ' clickable-file' : ''}" ${liveSync.connected ? `data-action="open-file-live" data-name="${esc(f.name)}" title="Click to open"` : `title="${esc(FOLDER_SYNC.folderRoot)}/${esc(state.activeProject)}/${esc(f.name)}"`}>📄 ${esc(f.name)}</span>
+          <span class="ffmeta">${esc(f.sizeLabel || formatBytes(f.size))} · ${esc(f.mtime)}</span>
+          ${tag && tag.notes ? `<span class="ffnotes">${esc(tag.notes)}</span>` : ''}
+          ${liveSync.connected ? `<button class="btn-tiny" data-action="delete-file-live" data-name="${esc(f.name)}" title="Delete from disk">Delete</button>` : `<button class="btn-tiny" data-action="copy-text" data-copy="${esc(FOLDER_SYNC.folderRoot)}/${esc(state.activeProject)}/${esc(f.name)}" title="Copy full path">Copy path</button>`}
+        </div>`;
+      });
+    }
+    html += `</div>`;
+
+    // quick-embed fallback (small browser-stored files) — only surfaced when not live-synced
+    if (!liveSync.connected) {
+      if (items.length > 0) {
+        html += `<div class="items">`;
+        items.forEach(it => {
+          const hasContent = !!it.dataUrl;
+          html += `<div class="upload-item">
+            <div class="meta">
+              <span class="fname${hasContent ? ' clickable-file' : ''}" ${hasContent ? `data-action="open-file" data-card="${cardId}" data-id="${it.id}" title="Click to open"` : ''}>📄 ${esc(it.name)}</span>
+              <span class="fnotes">${it.size ? formatBytes(it.size) + ' · ' : ''}${it.date ? esc(it.date) : ''}${!hasContent && it.size ? ' · reference only (too large to embed)' : ''}</span>
+              ${it.notes ? `<span class="fnotes">${esc(it.notes)}</span>` : ''}
+            </div>
+            <button class="rm" data-action="remove-upload" data-card="${cardId}" data-id="${it.id}">&times;</button>
+          </div>`;
+        });
+        html += `</div>`;
+      }
+      html += `
+        <button class="add-file-btn" data-action="toggle-upload-form" data-card="${cardId}">+ Quick-embed a small file</button>
+        <div class="inline-form" id="form-${cardId}">
+          <input type="file" id="input-file-${cardId}">
+          <input type="text" placeholder="Notes (optional)" id="input-notes-${cardId}">
+          <div class="row-btns">
+            <button class="save" data-action="save-upload" data-card="${cardId}">Upload</button>
+            <button class="cancel" data-action="toggle-upload-form" data-card="${cardId}">Cancel</button>
+          </div>
+        </div>`;
+    } else {
+      html += `
+        <button class="add-file-btn" data-action="toggle-upload-form" data-card="${cardId}" ${liveSync.busy ? 'disabled' : ''}>+ Add file${liveSync.busy ? ' (saving…)' : ''}</button>
+        <div class="inline-form" id="form-${cardId}">
+          <input type="file" id="input-file-${cardId}">
+          <input type="text" placeholder="Notes (optional)" id="input-notes-${cardId}">
+          <div class="row-btns">
+            <button class="save" data-action="save-upload-live" data-card="${cardId}">Save to folder</button>
+            <button class="cancel" data-action="toggle-upload-form" data-card="${cardId}">Cancel</button>
+          </div>
+        </div>`;
+    }
+    html += `</div>`;
+  });
+  html += `</div>`;
+
+  // green publications button
+  const pubCount = proj.publications.length;
+  html += `<div class="pub-btn" data-action="open-publications" role="button" tabindex="0">
+    <span>📚 ${renderTitle('pub', null, state.meta.pubTitle)}</span>
+    <span class="count">${pubCount} entr${pubCount===1?'y':'ies'}</span>
+  </div>`;
+
+  // gray sections
+  SECTION_ORDER.forEach(sec => {
+    html += renderSection(sec);
+  });
+
+  return html;
+}
+
+function renderSection(secId) {
+  const data = currentProject().sections[secId];
+  const collapsed = data.collapsed;
+  const schema = SECTION_SCHEMA[secId];
+  let html = `<div class="section">
+    <div class="section-header ${collapsed ? 'collapsed' : ''}" data-action="toggle-section" data-section="${secId}">
+      <span>${renderTitle('section', secId, sectionTitle(secId))} <span style="font-weight:400;opacity:.85;font-size:12px;">(${data.rows.length})</span></span>
+      <span class="chev">▼</span>
+    </div>
+    <div class="section-body ${collapsed ? 'hidden' : ''}">`;
+
+  schema.filter(c => c.type === 'text-suggest').forEach(col => {
+    html += `<datalist id="dl-${secId}-${col.key}">`;
+    (col.suggestions || []).forEach(s => html += `<option value="${esc(s)}">`);
+    html += `</datalist>`;
+  });
+
+  if (data.rows.length === 0) {
+    html += `<div class="empty-note">No entries yet — click "Add row" to log your first document.</div>`;
+  } else {
+    html += `<table class="datatable"><thead><tr>`;
+    schema.forEach(col => html += `<th>${esc(col.label)}</th>`);
+    html += `<th></th></tr></thead><tbody>`;
+    data.rows.forEach(row => {
+      html += `<tr>`;
+      schema.forEach(col => {
+        const val = row[col.key] ?? (col.type === 'checkbox' ? false : '');
+        if (col.type === 'select') {
+          html += `<td><select data-action="edit-cell" data-section="${secId}" data-id="${row.id}" data-key="${col.key}">`;
+          html += `<option value=""></option>`;
+          col.options.forEach(opt => {
+            html += `<option value="${esc(opt)}" ${val===opt?'selected':''}>${esc(opt)}</option>`;
+          });
+          html += `</select></td>`;
+        } else if (col.type === 'checkbox') {
+          html += `<td style="text-align:center;"><input type="checkbox" data-action="edit-cell-check" data-section="${secId}" data-id="${row.id}" data-key="${col.key}" ${val ? 'checked' : ''}></td>`;
+        } else if (col.type === 'date') {
+          html += `<td><input type="date" value="${esc(val)}" data-action="edit-cell" data-section="${secId}" data-id="${row.id}" data-key="${col.key}"></td>`;
+        } else if (col.type === 'text-suggest') {
+          html += `<td><input type="text" list="dl-${secId}-${col.key}" value="${esc(val)}" data-action="edit-cell" data-section="${secId}" data-id="${row.id}" data-key="${col.key}"></td>`;
+        } else if (col.type === 'textarea') {
+          html += `<td><textarea rows="1" data-action="edit-cell" data-section="${secId}" data-id="${row.id}" data-key="${col.key}">${esc(val)}</textarea></td>`;
+        } else if (col.type === 'figures') {
+          const figs = row.figures || [];
+          html += `<td><div class="fig-cell">`;
+          figs.forEach(f => {
+            html += `<div class="fig-thumb-wrap">
+              <img class="fig-thumb" src="${f.dataUrl}" title="${esc(f.name)}" data-action="view-figure" data-scope="section" data-section="${secId}" data-id="${row.id}" data-fig="${f.id}">
+              <button class="fig-thumb-rm" data-action="remove-figure" data-scope="section" data-section="${secId}" data-id="${row.id}" data-fig="${f.id}" title="Remove">&times;</button>
+            </div>`;
+          });
+          html += `<button class="fig-add-btn" data-action="add-figure" data-scope="section" data-section="${secId}" data-id="${row.id}" title="Add figure image">+</button>`;
+          html += `</div></td>`;
+        } else {
+          html += `<td><input type="text" value="${esc(val)}" data-action="edit-cell" data-section="${secId}" data-id="${row.id}" data-key="${col.key}"></td>`;
+        }
+      });
+      html += `<td><button class="del-row" data-action="del-row" data-section="${secId}" data-id="${row.id}" title="Delete row">&times;</button></td>`;
+      html += `</tr>`;
+    });
+    html += `</tbody></table>`;
+  }
+  html += `<button class="add-row-btn" data-action="add-row" data-section="${secId}">+ Add row</button>`;
+  html += `</div></div>`;
+  return html;
+}
+
+function renderPublications() {
+  const proj = currentProject();
+  let html = `<button class="back-btn" data-action="back-to-dashboard">&larr; Back to ${esc(state.activeProject)}</button>`;
+  html += `<div class="page-title">📚 ${renderTitle('pub', null, state.meta.pubTitle)} — ${esc(state.activeProject)}</div>`;
+
+  // shared datalist for "cited for" suggestions
+  const citedForCol = PUB_SCHEMA.find(c => c.key === 'citedFor');
+  html += `<datalist id="citedfor-options">`;
+  citedForCol.suggestions.forEach(s => html += `<option value="${esc(s)}">`);
+  html += `</datalist>`;
+
+  if (proj.publications.length === 0) {
+    html += `<div class="empty-note">No publications logged yet.</div>`;
+  } else {
+    html += `<table class="datatable"><thead><tr>`;
+    PUB_SCHEMA.forEach(col => html += `<th>${esc(col.label)}</th>`);
+    html += `<th></th><th></th></tr></thead><tbody>`;
+    proj.publications.forEach(row => {
+      html += `<tr>`;
+      PUB_SCHEMA.forEach(col => {
+        if (col.type === 'pdf') {
+          html += `<td>`;
+          if (!liveSync.connected) {
+            html += `<span class="folder-empty">Connect folder sync to attach PDFs</span>`;
+          } else if (row.pdfFileName) {
+            html += `<div class="folder-file-row" style="margin:0;">
+              <span class="ffname clickable-file" data-action="open-pub-pdf" data-name="${esc(row.pdfFileName)}" title="Click to open">📄 ${esc(row.pdfFileName)}</span>
+              <button class="btn-tiny" data-action="delete-pub-pdf" data-name="${esc(row.pdfFileName)}" data-id="${row.id}" title="Delete from disk">Delete</button>
+            </div>`;
+          } else if (pendingPdfUploads[row.id]) {
+            html += `<div class="folder-file-row pending" style="margin:0;">
+              <span class="ffname" title="Not saved yet — click Confirm on this row">📎 ${esc(pendingPdfUploads[row.id].name)}</span>
+              <span class="ffmeta">pending — hit Confirm</span>
+              <button class="btn-tiny" data-action="cancel-pending-pdf" data-id="${row.id}" title="Remove selection">Cancel</button>
+            </div>`;
+          } else {
+            html += `<button class="fig-add-btn" data-action="add-pub-pdf" data-id="${row.id}" title="Choose paper PDF (saved when you hit Confirm)" ${liveSync.busy ? 'disabled' : ''}>+</button>`;
+          }
+          html += `</td>`;
+        } else if (col.type === 'figures') {
+          const figs = row.figures || [];
+          html += `<td><div class="fig-cell">`;
+          figs.forEach(f => {
+            html += `<div class="fig-thumb-wrap">
+              <img class="fig-thumb" src="${f.dataUrl}" title="${esc(f.name)}" data-action="view-figure" data-scope="pub" data-id="${row.id}" data-fig="${f.id}">
+              <button class="fig-thumb-rm" data-action="remove-figure" data-scope="pub" data-id="${row.id}" data-fig="${f.id}" title="Remove">&times;</button>
+            </div>`;
+          });
+          html += `<button class="fig-add-btn" data-action="add-figure" data-scope="pub" data-id="${row.id}" title="Add figure image">+</button>`;
+          html += `</div></td>`;
+        } else if (col.type === 'text-suggest') {
+          const val = row[col.key] ?? '';
+          html += `<td><input type="text" list="citedfor-options" value="${esc(val)}" data-action="edit-pub" data-id="${row.id}" data-key="${col.key}"></td>`;
+        } else if (col.type === 'textarea') {
+          const val = row[col.key] ?? '';
+          html += `<td><textarea rows="1" data-action="edit-pub" data-id="${row.id}" data-key="${col.key}">${esc(val)}</textarea></td>`;
+        } else {
+          const val = row[col.key] ?? '';
+          html += `<td><input type="text" value="${esc(val)}" data-action="edit-pub" data-id="${row.id}" data-key="${col.key}"></td>`;
+        }
+      });
+      html += `<td><button class="confirm-row-btn" data-action="confirm-pub-row" data-id="${row.id}" title="Check for duplicates and confirm">✓ Confirm</button></td>`;
+      html += `<td><button class="del-row" data-action="del-pub" data-id="${row.id}">&times;</button></td>`;
+      html += `</tr>`;
+    });
+    html += `</tbody></table>`;
+  }
+  html += `<button class="add-row-btn" data-action="add-pub">+ Add publication</button>`;
+  html += `<button class="btn-sm" data-action="export-pub-csv" style="margin-top:12px;" ${proj.publications.length === 0 ? 'disabled' : ''}>⬇ Export citation list (CSV)</button>`;
+  return html;
+}
+
+function findFigureRow(scope, secId, rowId) {
+  if (scope === 'section') {
+    return currentProject().sections[secId].rows.find(r => r.id === rowId);
+  }
+  return currentProject().publications.find(r => r.id === rowId);
+}
+
+const CSV_EXPORT_COLUMNS = [
+  { key: 'title', label: 'Title' },
+  { key: 'authors', label: 'Authors' },
+  { key: 'year', label: 'Year' },
+  { key: 'link', label: 'Link' },
+  { key: 'citedFor', label: 'Cited For' },
+  { key: 'notes', label: 'Notes' }
+]; // Paper PDF and Key Figures are real files, not spreadsheet-friendly, so they're left out.
+
+function csvEscape(value) {
+  const str = String(value ?? '');
+  if (/[",\n\r]/.test(str)) return '"' + str.replace(/"/g, '""') + '"';
+  return str;
+}
+
+function exportPublicationsCsv() {
+  const proj = currentProject();
+  const rows = proj.publications || [];
+  if (rows.length === 0) { alert('No publications to export yet.'); return; }
+  const lines = [CSV_EXPORT_COLUMNS.map(c => csvEscape(c.label)).join(',')];
+  rows.forEach(row => {
+    lines.push(CSV_EXPORT_COLUMNS.map(c => csvEscape(row[c.key])).join(','));
+  });
+  const csv = '﻿' + lines.join('\r\n'); // BOM so Excel opens UTF-8 accented names/titles correctly
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const dateStamp = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = `${state.activeProject}_citations_${dateStamp}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function confirmPubRow(rowId) {
+  const proj = currentProject();
+  const row = proj.publications.find(r => r.id === rowId);
+  if (!row) return;
+  const title = (row.title || '').trim();
+  if (!title) { alert('Enter a title before confirming.'); return; }
+  const dup = proj.publications.find(r => r.id !== rowId && (r.title || '').trim().toLowerCase() === title.toLowerCase());
+  if (dup) {
+    const keepBoth = confirm(`"${title}" looks like it's already in your list. Keep both entries, or stop and remove this one?\n\nOK = keep both\nCancel = remove this entry`);
+    if (!keepBoth) {
+      delete pendingPdfUploads[rowId]; // discard the queued PDF too — never written to disk
+      proj.publications = proj.publications.filter(r => r.id !== rowId);
+      saveState(); render();
+      return;
+    }
+  }
+  // row is being kept — this is the one moment a queued PDF actually gets written to disk
+  if (pendingPdfUploads[rowId]) {
+    const file = pendingPdfUploads[rowId];
+    delete pendingPdfUploads[rowId];
+    uploadPubPdfLive(rowId, file);
+  }
+}
+
+function openLightbox(dataUrl, caption) {
+  const overlay = document.createElement('div');
+  overlay.className = 'lightbox-overlay';
+  overlay.innerHTML = `<button class="lightbox-close">&times;</button><img src="${dataUrl}"><div class="lightbox-caption">${esc(caption)}</div>`;
+  overlay.addEventListener('click', (e) => { if (e.target === overlay || e.target.classList.contains('lightbox-close')) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
+
+/* ---------- event handling ---------- */
+function attachHandlers() {
+  const app = document.getElementById('app');
+
+  app.querySelectorAll('[data-action]').forEach(el => {
+    const action = el.getAttribute('data-action');
+
+    if (action === 'switch-project') {
+      el.addEventListener('click', () => {
+        state.activeProject = el.getAttribute('data-project');
+        state.view = 'dashboard';
+        saveState(); render();
+        if (liveSync.connected) refreshProjectListing(state.activeProject).then(render);
+      });
+    }
+    if (action === 'add-project') {
+      el.addEventListener('click', () => {
+        const name = prompt('New project name:');
+        if (!name) return;
+        if (state.projects[name]) { alert('A project with that name already exists.'); return; }
+        state.projects[name] = newProjectData();
+        state.projectOrder.push(name);
+        state.activeProject = name;
+        state.view = 'dashboard';
+        saveState(); render();
+      });
+    }
+    if (action === 'rename-project') {
+      el.addEventListener('click', () => {
+        const oldName = state.activeProject;
+        const name = prompt('Rename project:', oldName);
+        if (!name || name === oldName) return;
+        if (state.projects[name]) { alert('A project with that name already exists.'); return; }
+        state.projects[name] = state.projects[oldName];
+        delete state.projects[oldName];
+        state.projectOrder = state.projectOrder.map(p => p === oldName ? name : p);
+        state.activeProject = name;
+        saveState(); render();
+      });
+    }
+    if (action === 'delete-project') {
+      el.addEventListener('click', () => {
+        if (state.projectOrder.length <= 1) { alert('You need at least one project.'); return; }
+        if (!confirm(`Delete project "${state.activeProject}" and all its data? This cannot be undone.`)) return;
+        const name = state.activeProject;
+        delete state.projects[name];
+        state.projectOrder = state.projectOrder.filter(p => p !== name);
+        state.activeProject = state.projectOrder[0];
+        state.view = 'dashboard';
+        saveState(); render();
+      });
+    }
+    if (action === 'export') {
+      el.addEventListener('click', () => {
+        const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'phd_tracker_backup.json';
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+    }
+    if (action === 'import') {
+      el.addEventListener('click', () => {
+        const inp = document.createElement('input');
+        inp.type = 'file'; inp.accept = 'application/json';
+        inp.onchange = (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            try {
+              const imported = JSON.parse(ev.target.result);
+              if (!imported.projects || !imported.projectOrder) throw new Error('bad format');
+              state = imported;
+              saveState(); render();
+            } catch(err) { alert('Could not read that file as a backup.'); }
+          };
+          reader.readAsText(file);
+        };
+        inp.click();
+      });
+    }
+    if (action === 'open-publications') {
+      el.addEventListener('click', () => { state.view = 'publications'; render(); });
+    }
+    if (action === 'back-to-dashboard') {
+      el.addEventListener('click', () => { state.view = 'dashboard'; render(); });
+    }
+    if (action === 'toggle-section') {
+      el.addEventListener('click', () => {
+        const sec = el.getAttribute('data-section');
+        currentProject().sections[sec].collapsed = !currentProject().sections[sec].collapsed;
+        saveState(); render();
+      });
+    }
+    if (action === 'add-row') {
+      el.addEventListener('click', () => {
+        const sec = el.getAttribute('data-section');
+        const row = { id: uid() };
+        SECTION_SCHEMA[sec].forEach(c => row[c.key] = c.type === 'checkbox' ? false : (c.type === 'figures' ? [] : ''));
+        currentProject().sections[sec].rows.push(row);
+        currentProject().sections[sec].collapsed = false;
+        saveState(); render();
+      });
+    }
+    if (action === 'del-row') {
+      el.addEventListener('click', () => {
+        const sec = el.getAttribute('data-section');
+        const id = el.getAttribute('data-id');
+        const s = currentProject().sections[sec];
+        s.rows = s.rows.filter(r => r.id !== id);
+        saveState(); render();
+      });
+    }
+    if (action === 'edit-cell') {
+      el.addEventListener('change', () => {
+        const sec = el.getAttribute('data-section');
+        const id = el.getAttribute('data-id');
+        const key = el.getAttribute('data-key');
+        const row = currentProject().sections[sec].rows.find(r => r.id === id);
+        if (row) row[key] = el.value;
+        saveState();
+      });
+    }
+    if (action === 'edit-cell-check') {
+      el.addEventListener('change', () => {
+        const sec = el.getAttribute('data-section');
+        const id = el.getAttribute('data-id');
+        const key = el.getAttribute('data-key');
+        const row = currentProject().sections[sec].rows.find(r => r.id === id);
+        if (row) row[key] = el.checked;
+        saveState();
+      });
+    }
+    if (action === 'add-pub') {
+      el.addEventListener('click', () => {
+        const row = { id: uid() };
+        PUB_SCHEMA.forEach(c => row[c.key] = c.type === 'figures' ? [] : '');
+        currentProject().publications.push(row);
+        saveState(); render();
+      });
+    }
+    if (action === 'export-pub-csv') {
+      el.addEventListener('click', () => exportPublicationsCsv());
+    }
+    if (action === 'confirm-pub-row') {
+      el.addEventListener('click', () => {
+        const id = el.getAttribute('data-id');
+        // pick up whatever is currently typed, even if the field hasn't blurred/saved yet
+        const row = el.closest('tr');
+        const titleInput = row && row.querySelector('[data-key="title"]');
+        if (titleInput) {
+          const proj0 = currentProject();
+          const r0 = proj0.publications.find(r => r.id === id);
+          if (r0) r0.title = titleInput.value;
+          saveState();
+        }
+        confirmPubRow(id);
+      });
+    }
+    if (action === 'del-pub') {
+      el.addEventListener('click', () => {
+        const id = el.getAttribute('data-id');
+        delete pendingPdfUploads[id];
+        const proj = currentProject();
+        proj.publications = proj.publications.filter(r => r.id !== id);
+        saveState(); render();
+      });
+    }
+    if (action === 'edit-pub') {
+      el.addEventListener('change', () => {
+        const id = el.getAttribute('data-id');
+        const key = el.getAttribute('data-key');
+        const row = currentProject().publications.find(r => r.id === id);
+        if (row) row[key] = el.value;
+        saveState();
+      });
+    }
+    if (action === 'add-pub-pdf') {
+      el.addEventListener('click', () => {
+        if (!liveSync.connected) return;
+        const rowId = el.getAttribute('data-id');
+        const inp = document.createElement('input');
+        inp.type = 'file'; inp.accept = 'application/pdf';
+        inp.onchange = (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+          // held in memory only — written to disk once this row's Confirm is clicked
+          pendingPdfUploads[rowId] = file;
+          render();
+        };
+        inp.click();
+      });
+    }
+    if (action === 'cancel-pending-pdf') {
+      el.addEventListener('click', () => {
+        delete pendingPdfUploads[el.getAttribute('data-id')];
+        render();
+      });
+    }
+    if (action === 'open-pub-pdf') {
+      el.addEventListener('click', () => openPubPdfLive(el.getAttribute('data-name')));
+    }
+    if (action === 'delete-pub-pdf') {
+      el.addEventListener('click', () => deletePubPdfLive(el.getAttribute('data-name'), el.getAttribute('data-id')));
+    }
+    if (action === 'add-figure') {
+      el.addEventListener('click', () => {
+        const id = el.getAttribute('data-id');
+        const scope = el.getAttribute('data-scope');
+        const secId = el.getAttribute('data-section');
+        const inp = document.createElement('input');
+        inp.type = 'file'; inp.accept = 'image/*';
+        inp.onchange = (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+          if (file.size > MAX_FIGURE_BYTES) {
+            if (!confirm(`"${file.name}" is ${(file.size/1024/1024).toFixed(1)}MB, which is fairly large to store in the page. Add it anyway?`)) return;
+          }
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            const row = findFigureRow(scope, secId, id);
+            if (!row) return;
+            if (!row.figures) row.figures = [];
+            row.figures.push({ id: uid(), name: file.name, dataUrl: ev.target.result });
+            try {
+              saveState();
+            } catch (err) {
+              row.figures.pop();
+              alert('Could not save that image — storage limit reached. Try a smaller image or export/clear old figures.');
+              return;
+            }
+            render();
+          };
+          reader.readAsDataURL(file);
+        };
+        inp.click();
+      });
+    }
+    if (action === 'remove-figure') {
+      el.addEventListener('click', () => {
+        const id = el.getAttribute('data-id');
+        const figId = el.getAttribute('data-fig');
+        const scope = el.getAttribute('data-scope');
+        const secId = el.getAttribute('data-section');
+        const row = findFigureRow(scope, secId, id);
+        if (row) row.figures = (row.figures || []).filter(f => f.id !== figId);
+        saveState(); render();
+      });
+    }
+    if (action === 'view-figure') {
+      el.addEventListener('click', () => {
+        const id = el.getAttribute('data-id');
+        const figId = el.getAttribute('data-fig');
+        const scope = el.getAttribute('data-scope');
+        const secId = el.getAttribute('data-section');
+        const row = findFigureRow(scope, secId, id);
+        const fig = row && (row.figures || []).find(f => f.id === figId);
+        if (fig) openLightbox(fig.dataUrl, fig.name);
+      });
+    }
+    if (action === 'toggle-upload-form') {
+      el.addEventListener('click', () => {
+        const card = el.getAttribute('data-card');
+        const form = document.getElementById('form-' + card);
+        form.classList.toggle('show');
+      });
+    }
+    if (action === 'save-upload') {
+      el.addEventListener('click', () => {
+        const card = el.getAttribute('data-card');
+        const fileInput = document.getElementById('input-file-' + card);
+        const notesInput = document.getElementById('input-notes-' + card);
+        const file = fileInput.files[0];
+        if (!file) { alert('Choose a file first.'); return; }
+
+        const finishAdd = (item) => {
+          currentProject().uploads[card].push(item);
+          try {
+            saveState();
+          } catch (err) {
+            currentProject().uploads[card].pop();
+            alert('Could not save that file — the browser storage limit was reached. Try removing some existing embedded files/figures first, or keep this one as a reference (retry after shrinking or splitting the file).');
+            return;
+          }
+          render();
+        };
+
+        if (file.size > MAX_EMBED_BYTES) {
+          // Too large to safely embed in browser storage — log it as a reference instead of
+          // attempting (and likely failing) to embed the actual bytes.
+          alert(`"${file.name}" is ${formatBytes(file.size)}. This page stores files in the browser, which only has a few MB of space total, so files over ${formatBytes(MAX_EMBED_BYTES)} are logged as a reference (name, size, date) rather than embedded — nothing is lost, but you'll need to note where it lives (e.g. its folder) so you can find it. Add that to the Notes field.`);
+          const item = { id: uid(), name: file.name, size: file.size, mimeType: file.type, notes: notesInput.value.trim(), date: new Date().toISOString().slice(0,10) };
+          finishAdd(item);
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const item = { id: uid(), name: file.name, size: file.size, mimeType: file.type, dataUrl: ev.target.result, notes: notesInput.value.trim(), date: new Date().toISOString().slice(0,10) };
+          finishAdd(item);
+        };
+        reader.onerror = () => alert('Could not read that file.');
+        reader.readAsDataURL(file);
+      });
+    }
+    if (action === 'remove-upload') {
+      el.addEventListener('click', () => {
+        const card = el.getAttribute('data-card');
+        const id = el.getAttribute('data-id');
+        currentProject().uploads[card] = currentProject().uploads[card].filter(it => it.id !== id);
+        saveState(); render();
+      });
+    }
+    if (action === 'open-file') {
+      el.addEventListener('click', () => {
+        const card = el.getAttribute('data-card');
+        const id = el.getAttribute('data-id');
+        const item = (currentProject().uploads[card] || []).find(it => it.id === id);
+        if (!item || !item.dataUrl) { alert('No file content stored for this item.'); return; }
+        const viewableInline = item.mimeType && (item.mimeType.startsWith('image/') || item.mimeType === 'application/pdf');
+        if (viewableInline) {
+          window.open(item.dataUrl, '_blank');
+        } else {
+          const a = document.createElement('a');
+          a.href = item.dataUrl;
+          a.download = item.name;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+        }
+      });
+    }
+    if (action === 'save-upload-live') {
+      el.addEventListener('click', () => {
+        const card = el.getAttribute('data-card');
+        const fileInput = document.getElementById('input-file-' + card);
+        const notesInput = document.getElementById('input-notes-' + card);
+        const file = fileInput.files[0];
+        if (!file) { alert('Choose a file first.'); return; }
+        uploadFileLive(card, file, notesInput.value);
+      });
+    }
+    if (action === 'open-file-live') {
+      el.addEventListener('click', () => openFileLive(el.getAttribute('data-name')));
+    }
+    if (action === 'delete-file-live') {
+      el.addEventListener('click', () => deleteFileLive(el.getAttribute('data-name')));
+    }
+    if (action === 'connect-live') {
+      el.addEventListener('click', () => connectLiveFolder());
+    }
+    if (action === 'reconnect-live') {
+      el.addEventListener('click', () => reconnectLiveFolder());
+    }
+    if (action === 'disconnect-live') {
+      el.addEventListener('click', () => disconnectLiveFolder());
+    }
+    if (action === 'refresh-live') {
+      el.addEventListener('click', () => refreshProjectListing(state.activeProject).then(render));
+    }
+    if (action === 'copy-text') {
+      el.addEventListener('click', () => {
+        const text = el.getAttribute('data-copy');
+        const done = () => {
+          const original = el.textContent;
+          el.textContent = 'Copied!';
+          setTimeout(() => { el.textContent = original; }, 1200);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(done).catch(() => {
+            prompt('Copy this path:', text);
+          });
+        } else {
+          prompt('Copy this path:', text);
+        }
+      });
+    }
+    if (action === 'start-edit-title') {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const kind = el.getAttribute('data-kind');
+        const id = el.getAttribute('data-id') || null;
+        editingTitle = { kind, id };
+        render();
+      });
+    }
+    if (action === 'title-input') {
+      // stop the header/button click behind it from firing while interacting with the input
+      el.addEventListener('click', (e) => e.stopPropagation());
+      el.addEventListener('mousedown', (e) => e.stopPropagation());
+      el.addEventListener('keydown', (e) => {
+        e.stopPropagation();
+        if (e.key === 'Enter') { e.preventDefault(); el.blur(); }
+        if (e.key === 'Escape') { e.preventDefault(); editingTitle = null; render(); }
+      });
+      el.addEventListener('blur', () => {
+        if (!editingTitle) return; // already handled by Escape
+        const kind = el.getAttribute('data-kind');
+        const id = el.getAttribute('data-id') || null;
+        const value = el.value.trim();
+        if (value) {
+          if (kind === 'section') state.meta.sectionTitles[id] = value;
+          if (kind === 'upload') state.meta.uploadTitles[id] = value;
+          if (kind === 'pub') state.meta.pubTitle = value;
+          saveState();
+        }
+        editingTitle = null;
+        render();
+      });
+    }
+  });
+
+  // focus the active inline title editor, if any
+  const activeInput = document.getElementById('title-edit-input');
+  if (activeInput) { activeInput.focus(); activeInput.select(); }
+
+  // auto-grow notes textareas to fit their content (so newlines from Enter are visible)
+  app.querySelectorAll('table.datatable textarea').forEach(ta => {
+    autoGrow(ta);
+    ta.addEventListener('input', () => autoGrow(ta));
+  });
+}
+
+function autoGrow(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.max(el.scrollHeight, 30) + 'px';
+}
+
+render();
+tryAutoRestoreLiveFolder();
+</script>
+</body>
+</html>
